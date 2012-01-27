@@ -5,10 +5,12 @@ from django.shortcuts import redirect
 from djangohelpers import (rendered_with,
                            allow_http)
 
-from main.forms import SpreadsheetForm
-
 import csv
+import json 
 import io
+
+from main.forms import SpreadsheetForm
+from main.utils import lookup
 
 CSV_COLUMNS = (
     "node_id",
@@ -52,7 +54,15 @@ def _import_spreadsheet(request):
                    columns=CSV_COLUMNS)
         return _import_spreadsheet_preview(request, ctx)
 
-    ## DO STUFF NOW
+    for row in rows:
+        resp = lookup(row['cleaned_data']['latitude'], row['cleaned_data']['longitude'])
+        row['cleaned_data']['districts'] = {
+            'federal': resp[0],
+            'state_senate': resp[1],
+            'state_house': resp[2]
+            }
+    resp = [row['cleaned_data'] for row in rows]
+    return HttpResponse(json.dumps(resp), content_type="application/json")
 
 @allow_http("GET", "POST")
 @rendered_with("main/import_spreadsheet.html")
