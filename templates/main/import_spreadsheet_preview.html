@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% load get %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <input type="hidden" name="confirm" value="true" />
+
+  <table>
+    <thead>
+      <tr>
+	{% for col in columns %}
+	<th>{{ col }}</th>
+	{% endfor %}
+	<th>Import?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr class="form_row {% if row.errors %}form_error{% endif %}">
+	{% for col in columns %}
+	<td>
+	  <div class="form row {% if row.errors and row.errors|getitem:col %}form_error{% endif %}">
+	    <input type="text" name="{{ col }}_{{ forloop.parentloop.counter0 }}"
+		   value="{{ row|getitem:col }}" />
+	    {% if row.errors %}
+	    {% for error in row.errors|getitem:col %}
+	    <label class="form_error">{{ error|escape }}</label>
+	    {% endfor %}
+	    {% endif %}
+	  </div>
+	</td>
+	{% endfor %}
+	
+	<td>
+	  <input type="checkbox" name="confirm_{{ forloop.counter0 }}"
+		 checked="checked" />
+	</td>
+      </tr>
+      {% endfor %}
+
+    </tbody>
+  </table> 
+
+    
+  <div class="submit-row" > 
+    <input type="submit" value="Upload spreadsheet" class="default" /> 
+  </div>
+
+</form>
+  
+{% endblock %}

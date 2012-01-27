@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <div>
+    <fieldset class="module aligned">
+      <div class="form-row">
+	<div> 
+	  <label for="data">Upload a CSV</label>
+	  <input type="file" id="data" name="data" />
+	</div>
+      </div>
+    </fieldset>
+    
+    <div class="submit-row" > 
+      <input type="submit" value="Upload spreadsheet" class="default" /> 
+    </div>
+  </div>
+  
+</form>
+{% endblock %}
