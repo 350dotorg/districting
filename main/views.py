@@ -6,8 +6,10 @@ from djangohelpers import (rendered_with,
                            allow_http)
 
 import csv
-import json 
 import io
+import json 
+import os
+import tempfile
 
 from main.forms import SpreadsheetForm
 from main.utils import lookup
@@ -28,7 +30,18 @@ CSV_COLUMNS = (
     )
 CSV_00 = "Node Id #"
 
+@allow_http("GET")
+def download_spreadsheet(request, path):
+    path = os.path.join(tempfile.gettempdir(), "districting%s.csv" % path)
+    assert os.path.exists(path)
+    with open(path) as fp:
+        content = fp.read()
+    resp = HttpResponse(content, content_type="text/plain")
+    resp['Content-Disposition'] = "attachment; filename=districts.csv"
+    return resp
+
 @allow_http("POST")
+@rendered_with("main/results_summary.html")
 def _import_spreadsheet(request):
     rows = []
     has_errors = False
@@ -54,15 +67,48 @@ def _import_spreadsheet(request):
                    columns=CSV_COLUMNS)
         return _import_spreadsheet_preview(request, ctx)
 
-    for row in rows:
-        resp = lookup(row['cleaned_data']['latitude'], row['cleaned_data']['longitude'])
-        row['cleaned_data']['districts'] = {
-            'federal': resp[0],
-            'state_senate': resp[1],
-            'state_house': resp[2]
-            }
-    resp = [row['cleaned_data'] for row in rows]
-    return HttpResponse(json.dumps(resp), content_type="application/json")
+    try:
+
+        fd, path = tempfile.mkstemp(prefix="districting", suffix=".csv")
+        with open(path, 'wb') as fp:
+            writer = csv.writer(fp)
+
+            stats = {'federal': {},
+                     'state_senate': {},
+                     'state_house': {}}
+
+            for row in rows:
+                resp = lookup(row['cleaned_data']['latitude'], 
+                              row['cleaned_data']['longitude'])
+                row['cleaned_data']['districts'] = {
+                    'federal': resp[0],
+                    'state_senate': resp[1],
+                    'state_house': resp[2]
+                    }
+
+                if resp[0] not in stats['federal']:
+                    stats['federal'][resp[0]] = 0
+                stats['federal'][resp[0]] += 1
+                if resp[1] not in stats['state_senate']:
+                    stats['state_senate'][resp[0]] = 0
+                stats['state_senate'][resp[0]] += 1
+                if resp[2] not in stats['state_house']:
+                    stats['state_house'][resp[2]] = 0
+                stats['state_house'][resp[2]] += 1
+
+                data = row['cleaned_data']
+                writer.writerow([data['node_id'], 
+                                 data['province'],
+                                 data['districts']['federal'],
+                                 data['districts']['state_senate'],
+                                 data['districts']['state_house'],
+                                 ])
+    except:
+        os.unlink(path)
+        raise
+    prefix = os.path.join(tempfile.gettempdir(), "districting")
+    path = path[len(prefix):-4]
+    return dict(stats=stats, path=path)
 
 @allow_http("GET", "POST")
 @rendered_with("main/import_spreadsheet.html")

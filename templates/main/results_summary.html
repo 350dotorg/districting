@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>
+  <a href="{% url download_spreadsheet path %}">Download CSV</a>
+</h1>
+
+<h1>Summary</h1>
+<h2>Congressional Districts</h2>
+<ul>
+  {% for d, i in stats.federal.items %}
+  <li>{{ d }}: {{ i }}</li>
+  {% endfor %}
+</ul>
+
+<h2>State Senate Districts</h2>
+<ul>
+  {% for d, i in stats.state_senate.items %}
+  <li>{{ d }}: {{ i }}</li>
+  {% endfor %}
+</ul>
+
+<h2>State House Districts</h2>
+<ul>
+  {% for d, i in stats.state_house.items %}
+  <li>{{ d }}: {{ i }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}
