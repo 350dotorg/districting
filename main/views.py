@@ -140,7 +140,7 @@ def import_spreadsheet(request):
             rows.append(entry)
         except IndexError:
             messages.error(request, 'Error reading line %s of the spreadsheet.' % lineno)
-            return HttpResponseRedirect(".")
+            return redirect(".")
 
     ctx = dict(rows=rows,
                columns=CSV_COLUMNS)
