@@ -152,4 +152,5 @@ def _import_spreadsheet_preview(request, ctx):
 @allow_http("GET")
 @rendered_with("main/home.html")
 def home(request):
-    return {}
+    return redirect("/upload/")
+
