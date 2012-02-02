@@ -4,3 +4,4 @@ psycopg2
 MySQL-python
 pysqlite
 git+https://github.com/django-debug-toolbar/django-debug-toolbar.git#egg=django-debug-toolbar-dev
+httplib2
